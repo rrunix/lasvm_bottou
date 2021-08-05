@@ -28,8 +28,9 @@ class LasvmTraininResult:
 
 class LasvmModel:
     
-    def __init__(self, model_filename):
+    def __init__(self, model_filename, convert_back_zero):
         self.model_filename = model_filename
+        self.convert_back_zero = convert_back_zero
         
         with open(self.model_filename) as fin:
             self.params = {k: v for k, v in zip(PARAMS, fin.readlines()) if len(k) > 0}
@@ -49,12 +50,15 @@ class LasvmModel:
             
             y = self._retrieve_predictions(preditions_file)
             
+            if self.convert_back_zero:
+                y[y == -1] = 0
+            
         return y
             
     def _retrieve_predictions(self, filename):
         with open(filename, 'r') as fin:
             y = list(map(float, fin.readlines()))
-            return np.array(y)
+            return np.array(y).astype(int)
     
     def _dump_lasvm_dataset(self, X, folder):
         dataset_file = os.path.join(folder, 'dataset')
@@ -63,7 +67,7 @@ class LasvmModel:
         return dataset_file
     
     
-def parse_output(process_stdout):
+def parse_output(process_stdout, convert_back_zero=False):
     chunks = []
     curr_chunk = None
     for line in process_stdout.split("\n"):
@@ -87,7 +91,7 @@ def parse_output(process_stdout):
     result = []            
     for chunk in chunks:
         model_filename = chunk['model_file']
-        model = LasvmModel(model_filename)
+        model = LasvmModel(model_filename, convert_back_zero=convert_back_zero)
         result.append(LasvmTraininResult(model, chunk))
         
     return result
@@ -118,6 +122,25 @@ def train_fake_streaming(X, y, model_base_name, chunks=None, optimizer=0, kernel
         [type]: [description]
     """
     
+    y = np.array(y).astype(int)
+    
+    
+    if len(set(y)) > 2:
+        raise ValueError("Only binary classification tasks are supported")
+    
+    zeros_mask = y == 0
+    convert_back_zero = False
+    
+    if any(zeros_mask):
+        y[zeros_mask] = -1
+        convert_back_zero = True
+    
+    if set(y) != {-1, 1}:
+        raise ValueError("Classes should be labelled as -1 (or 0) and 1")
+    
+    if len(X) != len(y):
+        raise ValueError("The number of observations should match the number of labels {} != {}".format(len(X), len(y)))
+        
     with tempfile.TemporaryDirectory() as tmp:
         
         # Dump dataset
@@ -153,7 +176,7 @@ def train_fake_streaming(X, y, model_base_name, chunks=None, optimizer=0, kernel
         if result.returncode != 0:
             raise ValueError("Non-zero return code ({}). stdout: {} \n stderr: {}".format(result.returncode, result.stdout, result.stderr))
           
-        output = parse_output(result.stdout)
+        output = parse_output(result.stdout, convert_back_zero=convert_back_zero)
         
         if chunks is None:
             output = output[0]
