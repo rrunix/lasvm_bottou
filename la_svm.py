@@ -139,7 +139,7 @@ def train_fake_streaming(X, y, model_base_name, chunks=None, optimizer=0, kernel
     if set(y) != {-1, 1}:
         raise ValueError("Classes should be labelled as -1 (or 0) and 1")
     
-    if len(X) != len(y):
+    if X.shape[0] != len(y):
         raise ValueError("The number of observations should match the number of labels {} != {}".format(len(X), len(y)))
         
     with tempfile.TemporaryDirectory() as tmp:
