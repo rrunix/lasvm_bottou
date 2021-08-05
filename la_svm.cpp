@@ -10,7 +10,7 @@ using namespace std;
 #include <iostream>
 #include <fstream>
 #include <algorithm>
-
+#include <chrono>
 #include "vector.h"
 #include "lasvm.h"
 
@@ -35,23 +35,22 @@ const char *kernel_type_table[] = {"linear", "polynomial", "rbf", "sigmoid"};
 class stopwatch
 {
 public:
-    stopwatch() : start(std::clock()) {} //start counting time
+    stopwatch() : start(std::chrono::steady_clock::now()) {} //start counting time
     ~stopwatch();
     double get_time()
     {
-        clock_t total = clock() - start;
-        ;
-        return double(total) / CLOCKS_PER_SEC;
+        std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+        return std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     };
 
 private:
-    std::clock_t start;
+    std::chrono::steady_clock::time_point start;
 };
 stopwatch::~stopwatch()
 {
-    clock_t total = clock() - start; //get elapsed time
-    cout << "Time(secs): " << double(total) / CLOCKS_PER_SEC << endl;
+
 }
+
 class ID // class to hold split file indices and labels
 {
 public:
@@ -94,7 +93,7 @@ int verbosity = 1; // verbosity level, 0=off
 int saves = 1;
 char report_file_name[1024];       // filename for the training report
 char split_file_name[1024] = "\0"; // filename for the splits
-int cache_size = 256;              // 256Mb cache size as default
+int cache_size = 1024;              // 256Mb cache size as default
 double epsgr = 1e-3;               // tolerance on gradients
 long long kcalcs = 0;              // number of kernel evaluations
 int binary_files = 0;
