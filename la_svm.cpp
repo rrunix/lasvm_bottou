@@ -868,6 +868,13 @@ void train_online_batch(char *model_file_name)
         printf("Executing from %d to %d\n", prev_chunk_start, chunks[current_chunk]);
         for (j = 0; j < epochs; j++)
         {
+            inew.resize(0);
+            iold.resize(0); // start again for next epoch..
+            for (i = prev_chunk_start; i < chunks[current_chunk]; i++)
+            {
+                inew.push_back(i);
+            }
+
             for (i = 0; i < m; i++)
             {
                 if (inew.size() == 0)
@@ -904,39 +911,6 @@ void train_online_batch(char *model_file_name)
                     if ((termination_type == ITERATIONS && i == select_size[k]) || (termination_type == SVS && l >= select_size[k]) || (termination_type == TIME && sw->get_time() >= select_size[k]))
 
                     {
-                        // if(saves>1) // if there is more than one model to save, give a new name
-                        // {
-                        //     // save current version before potential finishing step
-                        //     int save_l,*save_sv; double *save_g, *save_alpha;
-                        //     save_l=(int)lasvm_get_l(sv);
-                        //     save_alpha= new double[l];lasvm_get_alpha(sv,save_alpha);
-                        //     save_g= new double[l];lasvm_get_g(sv,save_g);
-                        //     save_sv= new int[l];lasvm_get_sv(sv,save_sv);
-
-                        //     finish(sv);
-                        //     char tmp[1000];
-
-                        //     timer+=;
-                        // f << i << " " << count_svs() << " " << kcalcs << " " << timer << endl;
-
-                        //     if(termination_type==TIME)
-                        //     {
-                        //         sprintf(tmp,"%s_%dsecs",model_file_name,i);
-                        //         fprintf(stdout,"..[saving model_%d secs]..",i);
-                        //     }
-                        //     else
-                        //     {
-                        //         fprintf(stdout,"..[saving model_%d pts]..",i);
-                        //         sprintf(tmp,"%s_%dpts",model_file_name,i);
-                        //     }
-                        //     libsvm_save_model(tmp);
-
-                        //     // get back old version
-                        //     //fprintf(stdout, "[restoring before finish]"); fflush(stdout);
-                        //     lasvm_init(sv, save_l, save_sv, save_alpha, save_g);
-                        //     delete save_alpha; delete save_sv; delete save_g;
-                        //     delete sw; sw=new stopwatch;    // reset clock
-                        // }
                         select_size[k] = select_size[select_size.size() - 1];
                         select_size.pop_back();
                     }
@@ -944,19 +918,12 @@ void train_online_batch(char *model_file_name)
                 if (select_size.size() == 0)
                     break; // early stopping, all intermediate models saved
             }
-
-            inew.resize(0);
-            iold.resize(0); // start again for next epoch..
-            for (i = prev_chunk_start; i < chunks[current_chunk]; i++)
-            {
-                inew.push_back(i);
-            }
         }
 
         char tmp[1000];
         sprintf(tmp, "%s_%d", model_file_name, current_chunk);
 
-        printf("@epoch %d\n", current_chunk);
+        printf("@chunk %d\n", current_chunk);
         printf("@param: nSVs=%d\n", l);
         printf("@param: ||w||^2=%g\n", lasvm_get_w2(sv));
         printf("@param: kcalcs=%lld\n", kcalcs);
