@@ -51,7 +51,7 @@
 
 #if USE_CBLAS
 # include <cblas.h>
-# unded  USE_FLOAT
+# undef  USE_FLOAT
 # define USE_FLOAT 1
 #endif
 
