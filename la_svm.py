@@ -6,6 +6,7 @@ import numpy as np
 from sklearn import base
 from sklearn.datasets import dump_svmlight_file
 
+import pathlib
 
 PARAMS = [
     "",
@@ -41,7 +42,7 @@ class LasvmModel:
             preditions_file = os.path.join(tmp, 'out.test')
             
             # call model....
-            command = ["./la_test", dataset_name, self.model_filename, preditions_file]
+            command = [os.path.join(pathlib.Path().resolve(), "la_test"), dataset_name, self.model_filename, preditions_file]
             result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             
             # handle cases where the call does not end successfully
@@ -166,8 +167,7 @@ def train_fake_streaming(X, y, model_base_name, chunks=None, optimizer=0, kernel
             base_arguments.append('-z')
             base_arguments.extend(chunks)
             
-        command = ['./la_svm', *base_arguments, dataset_file, model_base_name]
-        
+        command = [os.path.join(pathlib.Path().resolve(), './la_svm'), *base_arguments, dataset_file, model_base_name]
         command = list(map(str, command))
     
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
