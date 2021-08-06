@@ -40,7 +40,7 @@ public:
     double get_time()
     {
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-        return std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
+        return std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     };
 
 private:
