@@ -932,9 +932,9 @@ void train_online_batch(char *model_file_name)
 
         int save_l,*save_sv; double *save_g, *save_alpha;
         save_l=(int)lasvm_get_l(sv);
-        save_alpha= new double[l];lasvm_get_alpha(sv,save_alpha);
-        save_g= new double[l];lasvm_get_g(sv,save_g);
-        save_sv= new int[l];lasvm_get_sv(sv,save_sv);
+        save_alpha= new double[save_l];lasvm_get_alpha(sv,save_alpha);
+        save_g= new double[save_l];lasvm_get_g(sv,save_g);
+        save_sv= new int[save_l];lasvm_get_sv(sv,save_sv);
 
         finish(sv);
 
